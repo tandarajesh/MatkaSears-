@@ -3,9 +3,11 @@ from fastapi import FastAPI
 from app.db.database import Base, engine
 from app.models.user import User
 from app.models.market import Market
+from app.models.game import Game
 
 from app.api.user import router as user_router
 from app.api.market import router as market_router
+from app.api.game import router as game_router
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -17,6 +19,7 @@ app = FastAPI(
 
 app.include_router(user_router)
 app.include_router(market_router)
+app.include_router(game_router)
 
 
 @app.get("/")
