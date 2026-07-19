@@ -15,3 +15,4 @@ class Game(Base):
     is_active = Column(Boolean, default=True)
 
     market = relationship("Market", back_populates="games")
+    results = relationship("Result", back_populates="game")
