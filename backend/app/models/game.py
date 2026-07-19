@@ -16,3 +16,4 @@ class Game(Base):
 
     market = relationship("Market", back_populates="games")
     results = relationship("Result", back_populates="game")
+    bets = relationship("Bet", back_populates="game")
