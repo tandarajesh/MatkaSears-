@@ -3,6 +3,7 @@ from pydantic import BaseModel
 
 
 class ResultCreate(BaseModel):
+    market_id: int
     game_id: int
     result_date: date
     open_result: str
@@ -10,6 +11,7 @@ class ResultCreate(BaseModel):
 
 
 class ResultUpdate(BaseModel):
+    market_id: int
     game_id: int
     result_date: date
     open_result: str
@@ -18,6 +20,7 @@ class ResultUpdate(BaseModel):
 
 class ResultResponse(BaseModel):
     id: int
+    market_id: int
     game_id: int
     result_date: date
     open_result: str

@@ -13,3 +13,5 @@ class User(Base):
     password = Column(String)
 
     bets = relationship("Bet", back_populates="user")
+
+    wallet = relationship("Wallet", back_populates="user", uselist=False)

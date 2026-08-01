@@ -6,11 +6,15 @@ from app.models.bet import Bet
 from app.models.user import User
 from app.models.market import Market
 from app.models.game import Game
+from app.models.wallet import Wallet
+from app.models.transaction import Transaction
+
 from app.schemas.bet import (
     BetCreate,
     BetUpdate,
     BetResponse,
 )
+
 
 router = APIRouter(
     prefix="/bets",
@@ -23,18 +27,57 @@ def create_bet(
     bet: BetCreate,
     db: Session = Depends(get_db)
 ):
-    user = db.query(User).filter(User.id == bet.user_id).first()
+    user = db.query(User).filter(
+        User.id == bet.user_id
+    ).first()
+
     if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
 
-    market = db.query(Market).filter(Market.id == bet.market_id).first()
+    market = db.query(Market).filter(
+        Market.id == bet.market_id
+    ).first()
+
     if market is None:
-        raise HTTPException(status_code=404, detail="Market not found")
+        raise HTTPException(
+            status_code=404,
+            detail="Market not found"
+        )
 
-    game = db.query(Game).filter(Game.id == bet.game_id).first()
+    game = db.query(Game).filter(
+        Game.id == bet.game_id
+    ).first()
+
     if game is None:
-        raise HTTPException(status_code=404, detail="Game not found")
+        raise HTTPException(
+            status_code=404,
+            detail="Game not found"
+        )
 
+    # Check wallet
+    wallet = db.query(Wallet).filter(
+        Wallet.user_id == bet.user_id
+    ).first()
+
+    if wallet is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Wallet not found"
+        )
+
+    if wallet.balance < bet.points:
+        raise HTTPException(
+            status_code=400,
+            detail="Insufficient wallet balance"
+        )
+
+    # Deduct bet points from wallet
+    wallet.balance -= bet.points
+
+    # Create bet
     db_bet = Bet(
         user_id=bet.user_id,
         market_id=bet.market_id,
@@ -45,15 +88,29 @@ def create_bet(
         bet_date=bet.bet_date,
     )
 
+    # Create transaction
+    transaction = Transaction(
+        user_id=bet.user_id,
+        transaction_type="Bet",
+        amount=-bet.points,
+        balance_after=wallet.balance,
+        description="Bet placed"
+    )
+
     db.add(db_bet)
+    db.add(transaction)
+
     db.commit()
+
     db.refresh(db_bet)
 
     return db_bet
 
 
 @router.get("/", response_model=list[BetResponse])
-def get_bets(db: Session = Depends(get_db)):
+def get_bets(
+    db: Session = Depends(get_db)
+):
     return db.query(Bet).all()
 
 
@@ -62,7 +119,9 @@ def get_bet(
     bet_id: int,
     db: Session = Depends(get_db)
 ):
-    bet = db.query(Bet).filter(Bet.id == bet_id).first()
+    bet = db.query(Bet).filter(
+        Bet.id == bet_id
+    ).first()
 
     if bet is None:
         raise HTTPException(
@@ -79,7 +138,9 @@ def update_bet(
     bet: BetUpdate,
     db: Session = Depends(get_db)
 ):
-    db_bet = db.query(Bet).filter(Bet.id == bet_id).first()
+    db_bet = db.query(Bet).filter(
+        Bet.id == bet_id
+    ).first()
 
     if db_bet is None:
         raise HTTPException(
@@ -107,7 +168,9 @@ def delete_bet(
     bet_id: int,
     db: Session = Depends(get_db)
 ):
-    db_bet = db.query(Bet).filter(Bet.id == bet_id).first()
+    db_bet = db.query(Bet).filter(
+        Bet.id == bet_id
+    ).first()
 
     if db_bet is None:
         raise HTTPException(
@@ -116,6 +179,7 @@ def delete_bet(
         )
 
     db.delete(db_bet)
+
     db.commit()
 
     return {
