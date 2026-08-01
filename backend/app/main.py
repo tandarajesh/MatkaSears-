@@ -18,6 +18,8 @@ from app.api.bet import router as bet_router
 from app.api.wallet import router as wallet_router
 from app.api.prize_multiplier import router as prize_multiplier_router
 from app.api.transaction import router as transaction_router
+from app.api import admin
+
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -35,6 +37,8 @@ app.include_router(bet_router)
 app.include_router(wallet_router)
 app.include_router(prize_multiplier_router)
 app.include_router(transaction_router)
+
+app.include_router(admin.router)
 
 
 @app.get("/")
